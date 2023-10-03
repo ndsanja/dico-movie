@@ -12,6 +12,8 @@ class Footer extends HTMLElement {
             DicoMovie Ltd. <br/>Build With Love by ND Sanja
             </p> 
             <p>Copyright © 2023 - All right reserved</p>
+            <p>Online version on this link</p>
+            <a class="underline" href="https://dico-movie.vercel.app" target="_blank">https://dico-movie.vercel.app</a>
         </aside> 
         <nav>
             <div class="grid grid-flow-col gap-4">
