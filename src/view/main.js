@@ -1,38 +1,23 @@
-import axios from 'axios';
-
 import '../components/AppBar';
 import '../components/Search';
 import '../components/Footer';
 import '../components/CardMovie';
+import Data from '../data/getData';
 
-async function main() {
+const main = async () => {
   const root = document.getElementById('root');
+  const dataSource = new Data();
 
   let initMovieData = [];
   let searchMovieData = [];
+  let errorText = '';
 
-  const baseUrl = 'https://api.themoviedb.org';
-  const headersConfig = {
-    headers: {
-      Authorization:
-        'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMTFlMjAyMmE0ZTE4OTdiNGFjN2Y5YmJiYmM1MWFjMSIsInN1YiI6IjY1MWJhZmFkOTY3Y2M3MzQyNjBhNmZiOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.P_eItLivO3NtGKkDWT32fc2TcQWoBiYZHtHGE_uK-zU',
-      accept: 'application/json',
-    },
-  };
-
-  async function fetchInitMovies() {
-    try {
-      const response = await axios.get(
-        `${baseUrl}/3/trending/movie/day?language=en-US'`,
-        headersConfig,
-      );
-      const data = response.data.results;
-      initMovieData = data;
-    } catch (error) {
-      throw new Error('Something wrong');
-    }
+  try {
+    const data = await dataSource.initData();
+    initMovieData = data;
+  } catch (error) {
+    errorText = error.message;
   }
-  await fetchInitMovies();
 
   root.innerHTML = `
     <header>
@@ -51,47 +36,48 @@ async function main() {
   const searchForm = document.getElementById('search-form');
 
   // load initial data
-  initMovieData.forEach((movie) => {
-    const movieCard = document.createElement('card-movie');
-    movieCard.movie = movie;
-    moviesContainer.appendChild(movieCard);
-  });
-
-  // Search Movie
-  async function fetchSearchMovies() {
-    try {
-      const response = await axios.get(
-        `${baseUrl}/3/search/movie?query=${searchInput.value}`,
-        headersConfig,
-      );
-      const data = response.data.results;
-      searchMovieData = data;
-    } catch (error) {
-      throw new Error('Something wrong');
-    }
+  if (initMovieData.length) {
+    initMovieData.forEach((movie) => {
+      const movieCard = document.createElement('card-movie');
+      movieCard.movie = movie;
+      moviesContainer.appendChild(movieCard);
+    });
+  } else {
+    moviesContainer.innerHTML = `
+    <div>
+      <p>${errorText}</p>
+    </div>
+    `;
   }
 
   searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     moviesContainer.innerText = '';
 
-    await fetchSearchMovies();
+    try {
+      const data = await dataSource.searchData(searchInput.value);
+      searchMovieData = data;
+      if (searchMovieData.length) {
+        errorText = 'Movie tidak ditemukan';
+      }
+    } catch (error) {
+      errorText = error.message;
+    }
 
     if (searchMovieData.length) {
       searchMovieData.forEach((movie) => {
         const movieCard = document.createElement('card-movie');
         movieCard.movie = movie;
-
         moviesContainer.appendChild(movieCard);
       });
     } else {
       moviesContainer.innerHTML = `
       <div>
-        <p>Movie tidak ditemukan</p>
+        <p>${errorText}</p>
       </div>
       `;
     }
   });
-}
+};
 
 export default main;
